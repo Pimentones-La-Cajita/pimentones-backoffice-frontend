@@ -2,12 +2,10 @@ import { api, DEFAULT_STORE } from '@/lib/api';
 import { SiteContentSchema, type Product, type StoreInfo, type SiteContent } from '@lacajita/shared';
 import { cop } from '@lacajita/shared';
 import { FlavorHero } from '@/components/FlavorHero';
-import { Assistant } from '@/components/Assistant';
 import { BrandManifesto } from '@/components/BrandManifesto';
 import { ProductCard } from '@/components/ProductCard';
 import { BoxBuilder } from '@/components/BoxBuilder';
 import { PairingGuide } from '@/components/PairingGuide';
-import { ArtisanProcess } from '@/components/ArtisanProcess';
 import { Testimonials } from '@/components/Testimonials';
 import { Newsletter } from '@/components/HomeClient';
 import { Reveal } from '@/lib/motion';
@@ -90,28 +88,30 @@ export default async function Home() {
         <Reveal>
           <BoxBuilder
             products={products}
+            giftKicker={c.giftKicker || 'Edición Especial'}
             giftTitle={c.giftTitle || 'Caja de Madera Artesanal'}
             giftText={c.giftText || 'El regalo definitivo para amantes de la buena cocina. Escoge tus frascos favoritos.'}
+            capacity={(c as any).giftCapacity ?? 4}
+            discountPct={(c as any).giftDiscountPct ?? 0}
+            pricingMode={(c as any).giftPricingMode ?? 'sum'}
+            fixedPrice={(c as any).giftFixedPrice ?? 0}
+            productSlugs={(c as any).giftProductSlugs ?? []}
           />
         </Reveal>
       )}
 
       {/* 6. Guía de Maridajes Culinarios por ocasión */}
       <Reveal>
-        <PairingGuide products={products} />
+        <PairingGuide
+          products={products}
+          kicker={c.pairingKicker}
+          title={c.pairingTitle}
+          subtitle={c.pairingSubtitle}
+          items={(c as any).pairingItems}
+        />
       </Reveal>
 
-      {/* 7. Proceso Artesanal: "De la Huerta a tu Mesa" */}
-      <Reveal>
-        <ArtisanProcess />
-      </Reveal>
-
-      {/* 9. Asistente interactivo de recetas */}
-      <Reveal>
-        <Assistant products={products} />
-      </Reveal>
-
-      {/* 10. Ticker de valores en movimiento */}
+      {/* 8. Ticker de valores en movimiento */}
       <div className="ticker" aria-hidden="true">
         <div>
           {[...c.values, ...c.values].map((v, i) => (
@@ -120,19 +120,9 @@ export default async function Home() {
         </div>
       </div>
 
-      {/* 11. Testimonios de clientes reales */}
+      {/* 9. Testimonios de clientes reales */}
       <Reveal>
         <Testimonials />
-      </Reveal>
-
-      {/* 12. Filosofía Slow Food heredada */}
-      <Reveal as="section" className="slow" aria-label="Nuestra forma de cocinar">
-        <img src="/img/fotos/diagonal.webp" alt="Frascos de conservas artesanales" loading="lazy" />
-        <div className="slow-copy">
-          <span className="kicker-pill">Cocina sin Afán</span>
-          <h2>{c.slowTitle}</h2>
-          <p>{c.slowText}</p>
-        </div>
       </Reveal>
 
       {/* 13. Preguntas frecuentes con diseño enriquecido */}
