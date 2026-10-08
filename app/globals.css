@@ -196,6 +196,49 @@ input[type='checkbox'], input[type='radio'] { -webkit-appearance: auto; appearan
 .price { font-size: 1.28rem; font-weight: 750; letter-spacing: -.02em; color: var(--ink); font-variant-numeric: tabular-nums; }
 .pcard-action .stepper { background: var(--surface); }
 
+@media (max-width: 640px) {
+  .pcard-buy {
+    flex-direction: column;
+    align-items: stretch;
+    gap: .55rem;
+    padding-top: .55rem;
+  }
+  .pcard-buy .price-stack {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: baseline;
+    width: 100%;
+  }
+  .pcard-buy .price {
+    font-size: 1.18rem;
+  }
+  .pcard-action {
+    width: 100%;
+  }
+  .pcard-action .btn,
+  .pcard-action .stepper {
+    width: 100%;
+    justify-content: center;
+    min-height: 40px;
+    font-size: .88rem;
+    padding: .45rem .8rem;
+    box-sizing: border-box;
+    border-radius: 999px;
+  }
+  .pcard-action .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: .4rem;
+  }
+  .pcard-action .stepper {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 .6rem;
+  }
+}
+
 
 /* Caja */
 .bundle { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); background: var(--kraft); border-radius: calc(var(--radius) + 8px); overflow: hidden; }
@@ -1310,7 +1353,27 @@ input[aria-invalid='true'], select[aria-invalid='true'] { border-color: var(--re
 .also h2 { font-size: clamp(1.5rem, 3vw, 2rem); margin-bottom: 1.2rem; }
 .also-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 @media (max-width: 1000px) { .also-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
-@media (max-width: 640px) { .also-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } .also-grid .pcard:nth-child(3) { display: none; } }
+@media (max-width: 640px) {
+  .also {
+    padding-bottom: calc(5.5rem + env(safe-area-inset-bottom, 0px));
+  }
+  .also-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: .75rem;
+  }
+  /* Jamas esconder productos en mobile - Plataforma World-Class */
+  .also-grid .pcard:nth-child(3) {
+    display: flex;
+  }
+}
+@media (max-width: 480px) {
+  .also-grid {
+    gap: .55rem;
+  }
+  .also-grid .pcard {
+    padding: .75rem .65rem;
+  }
+}
 
 .ticker:hover div { animation-play-state: paused; }
 .as-head h2, .gift h2, .news h2, .pairings h2, .faq h2, .section-head h2 { font-size: clamp(1.9rem, 3.8vw, 2.8rem); }
