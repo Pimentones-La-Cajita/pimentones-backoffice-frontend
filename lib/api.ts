@@ -9,6 +9,8 @@ import { z } from 'zod';
 const isServer = typeof window === 'undefined';
 const BASE = isServer ? process.env.API_URL || 'http://localhost:4000' : '';
 
+import { savePersistentCache, getPersistentCache, clearPersistentCache, enqueueOutbox } from './offline-db';
+
 export class ApiError extends Error { constructor(message: string, public status: number) { super(message); } }
 
 // -----------------------------------------------------------------------------
@@ -35,12 +37,14 @@ export function getCachedData<T = any>(key: string, maxAgeMs = 600_000): T | nul
 export function setCachedData<T = any>(key: string, data: T): void {
   if (isServer) return;
   memoryCache.set(key, { data, timestamp: Date.now() });
+  savePersistentCache(key, data);
 }
 
 export function invalidateCache(pattern?: string | RegExp): void {
   if (isServer) return;
   if (!pattern) {
     memoryCache.clear();
+    clearPersistentCache();
     return;
   }
   for (const key of Array.from(memoryCache.keys())) {
@@ -49,6 +53,7 @@ export function invalidateCache(pattern?: string | RegExp): void {
       memoryCache.delete(key);
     }
   }
+  clearPersistentCache(pattern);
 }
 
 async function cachedRequest<T>(
@@ -72,13 +77,20 @@ async function cachedRequest<T>(
     .then((data) => {
       if (!isServer) {
         memoryCache.set(cacheKey, { data, timestamp: Date.now() });
+        savePersistentCache(cacheKey, data);
         inflightRequests.delete(cacheKey);
       }
       return data;
     })
-    .catch((err) => {
+    .catch(async (err) => {
       if (!isServer) {
         inflightRequests.delete(cacheKey);
+        // Fallback a almacenamiento persistente local (IndexedDB) si no hay red
+        const persistent = await getPersistentCache<T>(cacheKey);
+        if (persistent !== null) {
+          memoryCache.set(cacheKey, { data: persistent, timestamp: Date.now() });
+          return persistent;
+        }
       }
       throw err;
     });
@@ -91,15 +103,35 @@ async function cachedRequest<T>(
 
 async function request<S extends z.ZodTypeAny>(path: string, schema: S, init: RequestInit & { revalidate?: number } = {}): Promise<z.output<S>> {
   const { revalidate, ...rest } = init;
-  const res = await fetch(`${BASE}/api${path}`, {
-    ...rest,
-    headers: { 'content-type': 'application/json', ...(rest.headers || {}) },
-    ...(isServer ? { next: { revalidate: revalidate ?? 60 } } : { cache: 'no-store' }),
-  } as RequestInit);
-  if (res.status === 204) return undefined as z.output<S>;
-  const data = await res.json().catch(() => ({}));
-  if (!res.ok) throw new ApiError((data as { error?: string }).error || 'No se pudo completar la solicitud.', res.status);
-  return schema.parse(data);
+  const method = (rest.method || 'GET').toUpperCase();
+
+  try {
+    const res = await fetch(`${BASE}/api${path}`, {
+      ...rest,
+      headers: { 'content-type': 'application/json', ...(rest.headers || {}) },
+      ...(isServer ? { next: { revalidate: revalidate ?? 60 } } : { cache: 'no-store' }),
+    } as RequestInit);
+    if (res.status === 204) return undefined as z.output<S>;
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new ApiError((data as { error?: string }).error || 'No se pudo completar la solicitud.', res.status);
+    return schema.parse(data);
+  } catch (err) {
+    // Si estamos en el navegador y no hay conexión a internet
+    const isOffline = typeof navigator !== 'undefined' && (!navigator.onLine || err instanceof TypeError);
+    if (!isServer && isOffline && ['POST', 'PUT', 'PATCH', 'DELETE'].includes(method)) {
+      // Encolar cambio para auto-sincronizar al volver a tener internet
+      await enqueueOutbox({
+        method: method as 'POST' | 'PUT' | 'PATCH' | 'DELETE',
+        url: `${BASE}/api${path}`,
+        body: typeof rest.body === 'string' ? rest.body : undefined,
+        headers: rest.headers as Record<string, string>,
+        description: `${method} ${path}`,
+      });
+      // Retorno optimista para que la interfaz continúe fluida
+      return { ok: true, offline: true } as unknown as z.output<S>;
+    }
+    throw err;
+  }
 }
 
 export const api = {

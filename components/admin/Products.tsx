@@ -187,7 +187,7 @@ export function Products() {
                       <div className="bo-pcard-foot">
                         <Toggle small checked={p.active} disabled={!canEdit} onChange={() => toggle(p)} label={<span style={{ fontSize: 12.5, fontWeight: 600 }}>{p.active ? 'En tienda' : 'Oculto'}</span>} />
                         <span style={{ marginLeft: 'auto' }} />
-                        <a href={`/producto/${p.slug}`} target="_blank" rel="noreferrer" className="bo-btn bo-btn--ghost bo-btn--sm" title="Ver en la tienda"><Icon name="external" size={14} /></a>
+                        <a href={`${process.env.NEXT_PUBLIC_STORE_URL || 'http://localhost:3000'}/producto/${p.slug}`} target="_blank" rel="noreferrer" className="bo-btn bo-btn--ghost bo-btn--sm" title="Ver en la tienda"><Icon name="external" size={14} /></a>
                         {canEdit && <Button size="sm" variant="secondary" icon="edit" onClick={() => openEdit(p)}>Editar</Button>}
                         <Menu trigger={(t) => <Button size="sm" variant="ghost" iconOnly icon="more" onClick={t} aria-label="Más acciones" />} items={menuFor(p)} />
                       </div>

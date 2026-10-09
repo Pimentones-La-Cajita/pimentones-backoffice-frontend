@@ -4,6 +4,7 @@ import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { adminApi, ApiError } from '@/lib/api';
 import { Avatar, Button, Icon, Menu, PageSkeleton, UIProvider, cls, plural, type IconName } from './kit';
+import { OfflineSyncBadge } from './OfflineSyncBadge';
 
 type Api = ReturnType<typeof adminApi>;
 type Me = { id: number; email: string; name: string; role: string };
@@ -15,6 +16,7 @@ const KEY = 'lacajita.admin';
 /** Preferencia del menú lateral (expandido / contraído) y punto de corte de escritorio. */
 const SIDEBAR_KEY = 'lacajita.admin.sidebar';
 const DESKTOP_MQ = '(min-width: 1024px)';
+const STORE_URL = process.env.NEXT_PUBLIC_STORE_URL || 'http://localhost:3000';
 
 /** Permisos: owner > admin > ops > viewer (mismo orden que valida la API). */
 const RANK: Record<string, number> = { viewer: 0, ops: 1, admin: 2, owner: 3 };
@@ -316,7 +318,7 @@ function Frame({ me, onLogout, children }: { me: Me | null; onLogout: () => void
                 <img className="bo-brand-logo" src="/img/logo.svg" alt="Pimentones La Cajita" />
                 <img className="bo-brand-mark" src="/img/isotipo.svg" alt="" aria-hidden="true" />
               </Link>
-              <a href="/" target="_blank" rel="noreferrer" className="bo-store" aria-label="Tienda en línea · publicada · ver sitio" {...tipFor('Tienda publicada · ver sitio')}>
+              <a href={STORE_URL} target="_blank" rel="noreferrer" className="bo-store" aria-label="Tienda en línea · publicada · ver sitio" {...tipFor('Tienda publicada · ver sitio')}>
                 <Icon name="store" size={18} />
                 <div><b>Tienda en línea</b><span><i className="bo-live" />Publicada · ver sitio</span></div>
                 <Icon name="external" size={14} />
@@ -352,7 +354,7 @@ function Frame({ me, onLogout, children }: { me: Me | null; onLogout: () => void
                 </button>
               )} items={[
                 { group: me?.email ?? '' },
-                { label: 'Ver tienda', icon: 'external', href: '/', external: true },
+                { label: 'Ver tienda', icon: 'external', href: STORE_URL, external: true },
                 { label: 'Equipo y bitácora', icon: 'shield', href: '/admin/usuarios' },
                 'sep',
                 { label: 'Cerrar sesión', icon: 'logout', onClick: onLogout, danger: true },
@@ -387,6 +389,7 @@ function Frame({ me, onLogout, children }: { me: Me | null; onLogout: () => void
               </button>
 
               <div className="bo-top-actions">
+                <OfflineSyncBadge />
                 <button type="button" className="bo-btn bo-btn--ghost bo-btn--icon bo-only-sm" onClick={() => setCommandOpen(true)} aria-label="Buscar">
                   <Icon name="search" size={18} />
                 </button>
@@ -402,7 +405,7 @@ function Frame({ me, onLogout, children }: { me: Me | null; onLogout: () => void
                   { label: `${plural(counts.unread, 'mensaje nuevo', 'mensajes nuevos')}`, icon: 'inbox', href: '/admin/mensajes', hidden: !counts.unread },
                   { label: `${plural(counts.lowStock, 'producto', 'productos')} con inventario bajo`, icon: 'alert', href: '/admin/inventario?f=attention', hidden: !counts.lowStock },
                 ]} />
-                <a href="/" target="_blank" rel="noreferrer" className="bo-btn bo-btn--secondary bo-btn--sm bo-hide-sm"><Icon name="external" size={15} />Ver tienda</a>
+                <a href={STORE_URL} target="_blank" rel="noreferrer" className="bo-btn bo-btn--secondary bo-btn--sm bo-hide-sm"><Icon name="external" size={15} />Ver tienda</a>
               </div>
             </header>
             <main className="bo-content" aria-busy={navigating}>{navigating ? <div className="bo-page-loading"><PageSkeleton /></div> : children}</main>
@@ -449,7 +452,7 @@ function CommandPalette({ open, onClose, onNavigate }: { open: boolean; onClose:
       { id: 'act-new-prod', label: 'Nuevo producto', icon: 'plus' as IconName, href: '/admin/productos?nuevo=1', category: 'Acciones' },
       { id: 'act-new-lot', label: 'Ingresar lote a inventario', icon: 'layers' as IconName, href: '/admin/inventario?lote=1', category: 'Acciones' },
       { id: 'act-new-coupon', label: 'Crear nuevo cupón', icon: 'ticket' as IconName, href: '/admin/cupones?nuevo=1', category: 'Acciones' },
-      { id: 'act-view-store', label: 'Ver tienda en vivo', icon: 'store' as IconName, href: '/', external: true, category: 'Acciones' },
+      { id: 'act-view-store', label: 'Ver tienda en vivo', icon: 'store' as IconName, href: STORE_URL, external: true, category: 'Acciones' },
     ];
     if (!query) return actions;
     return actions.filter((a) => a.label.toLowerCase().includes(query));

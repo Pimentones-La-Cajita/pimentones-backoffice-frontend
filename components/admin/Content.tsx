@@ -489,7 +489,7 @@ export function Content() {
             >
               Simulador de tienda
             </Button>
-            <LinkButton href="/" external icon="external" variant="ghost">
+            <LinkButton href={process.env.NEXT_PUBLIC_STORE_URL || 'http://localhost:3000'} external icon="external" variant="ghost">
               Ver tienda
             </LinkButton>
             {dirty && editable && (

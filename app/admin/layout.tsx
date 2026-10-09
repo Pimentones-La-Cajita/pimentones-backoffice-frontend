@@ -1,5 +1,6 @@
 import { Plus_Jakarta_Sans } from 'next/font/google';
 import { AdminShell } from '@/components/admin/AdminShell';
+import { AdminPwaRegister } from '@/components/admin/AdminPwaRegister';
 import './admin.css';
 
 const plusJakarta = Plus_Jakarta_Sans({
@@ -14,6 +15,7 @@ export const metadata = { title: 'Administración', robots: { index: false, foll
 export default function Layout({ children }: { children: React.ReactNode }) {
   return (
     <div className={plusJakarta.variable} style={{ minHeight: '100vh' }}>
+      <AdminPwaRegister />
       <AdminShell>{children}</AdminShell>
     </div>
   );
